@@ -161,7 +161,7 @@
 
     <script>
 let map, markers = [], currentTheme = 'light', activeCat = 'All', isSignup = false;
-const vendors = [];
+let vendors = [];
 
 // 🔄 SWITCH LOGIN / SIGNUP
 function switchMode(mode) {
@@ -174,7 +174,7 @@ function switchMode(mode) {
     document.getElementById("tabSign").classList.toggle("active", isSignup);
 }
 
-// 🔐 AUTH
+// 🔐 AUTH (FIXED)
 async function handleAuth() {
     const email = document.getElementById("regEmail").value;
     const password = document.getElementById("regPass").value;
@@ -197,7 +197,16 @@ async function handleAuth() {
 
         if (res.ok) {
             alert(isSignup ? "Signup Success ✅" : "Login Success ✅");
+
+            // ✅ TOKEN SAVE (important)
+            if (data.token) {
+                localStorage.setItem("token", data.token);
+            }
+
+            // ✅ HIDE LOGIN SCREEN
             document.getElementById('authOverlay').classList.add('hidden');
+
+            // ✅ INIT APP FLOW
             initMap();
         } else {
             alert(data.message || "Error");
@@ -207,14 +216,13 @@ async function handleAuth() {
     }
 }
 
-// 📍 FETCH VENDORS
+// 📍 FETCH VENDORS (FIXED)
 async function fetchVendors() {
     try {
         const res = await fetch("http://localhost:9000/vendors");
         const data = await res.json();
 
-        vendors.length = 0;
-        vendors.push(...data);
+        vendors = data;
 
         renderListings();
     } catch (err) {
@@ -233,10 +241,11 @@ function initMap() {
 
     map.on('moveend', renderListings);
 
+    // ✅ AFTER MAP LOAD → FETCH DATA
     fetchVendors();
 }
 
-// 📦 RENDER LIST
+// 📦 RENDER LIST + MAP
 function renderListings() {
     const list = document.getElementById('listings-list');
     const search = document.getElementById('mainSearch').value.toLowerCase();
@@ -256,9 +265,12 @@ function renderListings() {
 
         if (matchesSearch && matchesCat && bounds.contains([v.latitude, v.longitude])) {
 
-            const marker = L.marker([v.latitude, v.longitude]).addTo(map);
+            // 📍 Marker
+            const marker = L.marker([v.latitude, v.longitude]).addTo(map)
+                .bindPopup(`<b>${v.name}</b><br>${v.type}<br>⭐ ${v.rating}`);
             markers.push(marker);
 
+            // 📋 Card
             const card = document.createElement('div');
             card.className = 'listing-card';
             card.innerHTML = `
