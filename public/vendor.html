@@ -174,9 +174,11 @@ button:hover{
 async function validateForm(){
     let name = document.getElementById("name").value;
     let phone = document.getElementById("mobile").value;
+    let type = document.querySelector("select").value;
+
     let data = {
         name: name,
-        type: "Electrician",
+        type: type,
         rating: 4.5,
         phone: phone,
         latitude: 22.8046,
@@ -184,7 +186,7 @@ async function validateForm(){
     };
 
     try {
-        const res = await fetch("/vendors", {
+        const res = await fetch("http://localhost:9000/vendors", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -194,12 +196,18 @@ async function validateForm(){
 
         const result = await res.json();
 
-        alert("✅ Vendor Added Successfully");
+        if(res.ok){
+            alert("✅ Vendor Added Successfully");
+        } else {
+            alert("❌ Failed: " + result.message);
+        }
+
     } catch(err){
+        console.error(err);
         alert("❌ Error connecting backend");
     }
 
-    return false; 
+    return false;
 }
 </script>
 

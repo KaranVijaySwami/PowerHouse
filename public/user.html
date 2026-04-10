@@ -213,7 +213,7 @@ async function handleAuth() {
             alert(data.message || "Error");
         }
     } catch (err) {
-        alert("Server not running ❌");
+        // alert("Server not running ❌");
     }
 }
 
@@ -233,7 +233,7 @@ async function loadVendors() {
 
             div.innerHTML = `
                 <h3>${vendor.name}</h3>
-                <p>${vendor.address}</p>
+                <p>${vendor.type}</p>
                 <p>📞 ${vendor.phone}</p>
             `;
 
