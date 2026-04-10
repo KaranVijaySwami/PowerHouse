@@ -160,100 +160,99 @@
     </div>
 
     <script>
-        let map, markers = [], currentTheme = 'light', activeCat = 'All', isSignup = false;
-        const vendors = [];
-        const neighborhoods = ["Bistupur", "Sakchi", "Kadma", "Telco", "Sonari", "Golmuri"];
-        const types = ["Electrician", "Cafe", "Pharmacy", "Gym", "Salon", "Hardware"];
+let map, markers = [], currentTheme = 'light', activeCat = 'All', isSignup = false;
+const vendors = [];
 
-        for(let i=1; i<=60; i++) {
-            const t = types[Math.floor(Math.random()*types.length)];
-            vendors.push({
-                id: i, name: `${neighborhoods[Math.floor(Math.random()*6)]} ${t} Service`,
-                type: t, rating: (Math.random()*1.4 + 3.6).toFixed(1),
-                phone: "919999988888",
-                coords: [22.8046 + (Math.random()-0.5)*0.05, 86.2029 + (Math.random()-0.5)*0.05]
-            });
+// 🔐 AUTH
+async function handleAuth() {
+    const email = document.getElementById("regEmail").value;
+    const password = document.getElementById("regPass").value;
+    const name = document.getElementById("regName").value;
+
+    const url = isSignup ? "signup" : "login";
+
+    const bodyData = isSignup
+        ? { name, email, password }
+        : { email, password };
+
+    const res = await fetch(`http://localhost:5000/${url}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyData)
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        document.getElementById('authOverlay').classList.add('hidden');
+        initMap();
+    } else {
+        alert(data.message || "Error");
+    }
+}
+
+
+// 📍 FETCH VENDORS
+async function fetchVendors() {
+    const res = await fetch("http://localhost:5000/vendors");
+    const data = await res.json();
+
+    vendors.length = 0;
+    vendors.push(...data);
+
+    renderListings();
+}
+
+
+// 🗺️ INIT MAP
+function initMap() {
+    if(map) return;
+
+    map = L.map('map', {zoomControl: false}).setView([22.8046, 86.2029], 14);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    map.on('moveend', renderListings);
+
+    fetchVendors(); // 🔥 important
+}
+
+function renderListings() {
+    const list = document.getElementById('listings-list');
+    const search = document.getElementById('mainSearch').value.toLowerCase();
+
+    if (!map) return;
+
+    const bounds = map.getBounds();
+
+    list.innerHTML = "";
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+
+    vendors.forEach(v => {
+        const matchesSearch = v.name.toLowerCase().includes(search);
+        const matchesCat = (activeCat === 'All' || v.type === activeCat);
+
+        if(matchesSearch && matchesCat && bounds.contains([v.latitude, v.longitude])) {
+
+            const marker = L.marker([v.latitude, v.longitude]).addTo(map);
+            markers.push(marker);
+
+            const card = document.createElement('div');
+            card.className = 'listing-card';
+            card.innerHTML = `
+                <p>${v.type}</p>
+                <h3>${v.name}</h3>
+                <div>${v.rating} ★</div>
+
+                <button onclick="window.open('https://wa.me/${v.phone}')">WhatsApp</button>
+                <button onclick="alert('Booked ${v.name}')">Book</button>
+            `;
+
+            list.appendChild(card);
         }
-
-        function switchMode(mode) {
-            isSignup = (mode === 'signup');
-            document.getElementById('tabLogin').classList.toggle('active', !isSignup);
-            document.getElementById('tabSign').classList.toggle('active', isSignup);
-            document.getElementById('nameField').style.display = isSignup ? 'block' : 'none';
-            document.getElementById('actionBtn').innerText = isSignup ? 'Create Account' : 'Sign In';
-        }
-
-        function handleAuth() {
-            // In a real app, validate SQL data here
-            document.getElementById('authOverlay').classList.add('hidden');
-            initMap();
-        }
-
-        function toggleTheme() {
-            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-            document.body.className = currentTheme + '-mode';
-            document.getElementById('themeText').innerText = currentTheme === 'light' ? 'Dark Mode' : 'Light Mode';
-            document.getElementById('themeIcon').className = currentTheme === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
-            if(map) updateTiles();
-        }
-
-        function initMap() {
-            if(map) return;
-            map = L.map('map', {zoomControl: false}).setView([22.8046, 86.2029], 14);
-            updateTiles();
-            map.on('moveend', renderListings);
-            renderListings();
-            setTimeout(() => map.invalidateSize(), 400);
-        }
-
-        function updateTiles() {
-            map.eachLayer(l => { if(l instanceof L.TileLayer) map.removeLayer(l); });
-            const url = currentTheme === 'dark' 
-                ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' 
-                : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-            L.tileLayer(url).addTo(map);
-        }
-
-        function setCat(c, el) {
-            document.querySelectorAll('.cat-chip').forEach(chip => chip.classList.remove('active'));
-            el.classList.add('active');
-            activeCat = c;
-            renderListings();
-        }
-
-        function renderListings() {
-            const list = document.getElementById('listings-list');
-            const search = document.getElementById('mainSearch').value.toLowerCase();
-            const bounds = map.getBounds();
-            list.innerHTML = "";
-            markers.forEach(m => map.removeLayer(m));
-            markers = [];
-
-            vendors.forEach(v => {
-                const matchesSearch = v.name.toLowerCase().includes(search);
-                const matchesCat = (activeCat === 'All' || v.type === activeCat);
-                if(matchesSearch && matchesCat && bounds.contains(L.latLng(v.coords))) {
-                    const marker = L.marker(v.coords).addTo(map);
-                    markers.push(marker);
-
-                    const card = document.createElement('div');
-                    card.className = 'listing-card';
-                    card.innerHTML = `
-                        <p style="font-size:10px; font-weight:900; color:var(--primary); text-transform:uppercase;">${v.type}</p>
-                        <h3>${v.name}</h3>
-                        <div class="rating-box">${v.rating} ★</div>
-                        <div class="action-row">
-                            <button class="btn-act btn-chat" onclick="window.open('https://wa.me/${v.phone}')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
-                            <button class="btn-act btn-primary" onclick="alert('Booking for ${v.name}')">Book Now</button>
-                        </div>
-                    `;
-                    card.onclick = (e) => { if(e.target.tagName !== 'BUTTON') map.flyTo(v.coords, 16); };
-                    list.appendChild(card);
-                }
-            });
-        }
-
-        function locateUser() { map.locate({setView: true, maxZoom: 16}); }
-    </script>
+    });
+}
+</script>
 </body>
 </html>
