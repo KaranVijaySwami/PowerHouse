@@ -20,7 +20,7 @@ body{
     background: linear-gradient(135deg,#1d2671,#c33764);
 }
 
-/* Glass Effect */
+
 .container{
     width:420px;
     padding:25px;
@@ -94,7 +94,7 @@ button:hover{
     transform:scale(1.05);
 }
 
-/* Preview */
+
 .preview{
     display:flex;
     flex-wrap:wrap;
@@ -174,8 +174,6 @@ button:hover{
 async function validateForm(){
     let name = document.getElementById("name").value;
     let phone = document.getElementById("mobile").value;
-
-    // demo values (baad me dynamic bana dena)
     let data = {
         name: name,
         type: "Electrician",
@@ -186,7 +184,7 @@ async function validateForm(){
     };
 
     try {
-        const res = await fetch("http://localhost:9000/vendors", {
+        const res = await fetch("/vendors", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -201,7 +199,7 @@ async function validateForm(){
         alert("❌ Error connecting backend");
     }
 
-    return false; // prevent reload
+    return false; 
 }
 </script>
 

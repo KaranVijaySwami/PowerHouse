@@ -153,7 +153,10 @@
     </div>
 
     <div class="content-area">
-        <aside class="sidebar" id="listings-list"></aside>
+        <aside class="sidebar" id="listings-list"> 
+
+            
+        </aside>
         <div id="map">
             <div class="fab-geo" onclick="locateUser()"><i class="fa-solid fa-crosshairs fa-lg"></i></div>
         </div>
@@ -163,7 +166,6 @@
 let map, markers = [], currentTheme = 'light', activeCat = 'All', isSignup = false;
 let vendors = [];
 
-// 🔄 SWITCH LOGIN / SIGNUP
 function switchMode(mode) {
     isSignup = (mode === "signup");
 
@@ -174,7 +176,7 @@ function switchMode(mode) {
     document.getElementById("tabSign").classList.toggle("active", isSignup);
 }
 
-// 🔐 AUTH (FIXED)
+
 async function handleAuth() {
     const email = document.getElementById("regEmail").value;
     const password = document.getElementById("regPass").value;
@@ -198,15 +200,14 @@ async function handleAuth() {
         if (res.ok) {
             alert(isSignup ? "Signup Success ✅" : "Login Success ✅");
 
-            // ✅ TOKEN SAVE (important)
+            
             if (data.token) {
                 localStorage.setItem("token", data.token);
             }
 
-            // ✅ HIDE LOGIN SCREEN
             document.getElementById('authOverlay').classList.add('hidden');
 
-            // ✅ INIT APP FLOW
+     
             initMap();
         } else {
             alert(data.message || "Error");
@@ -216,22 +217,38 @@ async function handleAuth() {
     }
 }
 
-// 📍 FETCH VENDORS (FIXED)
-async function fetchVendors() {
+
+
+async function loadVendors() {
     try {
-        const res = await fetch("/vendors");
-        const data = await res.json();
+        const response = await fetch("/vendors");
+        const vendors = await response.json();
 
-        vendors = data;
+        const list = document.getElementById("listings-list");
+        list.innerHTML = ""; // clear old content
 
-        renderListings();
-    } catch (err) {
-        console.log(err);
-        alert("Backend not connected ❌");
+        vendors.forEach(vendor => {
+            const div = document.createElement("div");
+            div.className = "vendor-card";
+
+            div.innerHTML = `
+                <h3>${vendor.name}</h3>
+                <p>${vendor.address}</p>
+                <p>📞 ${vendor.phone}</p>
+            `;
+
+            list.appendChild(div);
+        });
+
+    } catch (error) {
+        console.error("Error loading vendors:", error);
     }
 }
 
-// 🗺️ INIT MAP
+
+window.onload = loadVendors;
+
+
 function initMap() {
     if (map) return;
 
@@ -241,11 +258,10 @@ function initMap() {
 
     map.on('moveend', renderListings);
 
-    // ✅ AFTER MAP LOAD → FETCH DATA
+   
     fetchVendors();
 }
 
-// 📦 RENDER LIST + MAP
 function renderListings() {
     const list = document.getElementById('listings-list');
     const search = document.getElementById('mainSearch').value.toLowerCase();
@@ -265,12 +281,12 @@ function renderListings() {
 
         if (matchesSearch && matchesCat && bounds.contains([v.latitude, v.longitude])) {
 
-            // 📍 Marker
+           
             const marker = L.marker([v.latitude, v.longitude]).addTo(map)
                 .bindPopup(`<b>${v.name}</b><br>${v.type}<br>⭐ ${v.rating}`);
             markers.push(marker);
 
-            // 📋 Card
+            
             const card = document.createElement('div');
             card.className = 'listing-card';
             card.innerHTML = `
@@ -289,7 +305,6 @@ function renderListings() {
     });
 }
 
-// 🎯 CATEGORY FILTER
 function setCat(cat, el) {
     activeCat = cat;
 
@@ -299,7 +314,6 @@ function setCat(cat, el) {
     renderListings();
 }
 
-// 🌙 THEME TOGGLE
 function toggleTheme() {
     const body = document.body;
 
@@ -316,7 +330,6 @@ function toggleTheme() {
     }
 }
 
-// 📍 USER LOCATION
 function locateUser() {
     navigator.geolocation.getCurrentPosition(pos => {
         const lat = pos.coords.latitude;

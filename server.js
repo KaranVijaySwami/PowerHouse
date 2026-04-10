@@ -12,11 +12,10 @@ app.use(bodyParser.json());
 
 const SECRET = "cityhub_secret";
 
-// ✅ MySQL Connection
 const db = mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "77393034",   // apna password
+    password: "77393034",   
     database: "cityhub"
 });
 
@@ -25,25 +24,20 @@ db.connect(err => {
     console.log("MySQL Connected...");
 });
 
-// ✅ Serve Frontend
 app.use(express.static(path.join(__dirname, "public")));
 
-// ✅ Main Page
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ✅ User Page
 app.get("/user", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "user.html"));
 });
 
-// ✅ Vendor Page
 app.get("/vendor", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "vendor.html"));
 });
 
-// 🔐 SIGNUP
 app.post("/signup", async (req, res) => {
     const { name, email, password } = req.body;
 
@@ -57,7 +51,6 @@ app.post("/signup", async (req, res) => {
 });
 
 
-// 🔐 LOGIN
 app.post("/login", (req, res) => {
     const { email, password } = req.body;
 
@@ -81,7 +74,6 @@ app.post("/login", (req, res) => {
 });
 
 
-// 📍 GET VENDORS
 app.get("/vendors", (req, res) => {
     const sql = "SELECT * FROM vendors";
     db.query(sql, (err, result) => {
@@ -90,8 +82,6 @@ app.get("/vendors", (req, res) => {
     });
 });
 
-
-// ➕ ADD VENDOR
 app.post("/vendors", (req, res) => {
     const { name, type, rating, phone, latitude, longitude } = req.body;
 
@@ -106,8 +96,6 @@ app.post("/vendors", (req, res) => {
     });
 });
 
-
-// 🚀 START SERVER
 app.listen(9000, () => {
-    console.log("Server running on http://localhost:9000 🚀");
+    console.log("Server running on http://localhost:9000");
 });
