@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vendor Registration Pro</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins', sans-serif;
+}
+
+body{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: linear-gradient(135deg,#1d2671,#c33764);
+}
+
+/* Glass Effect */
+.container{
+    width:420px;
+    padding:25px;
+    border-radius:15px;
+    background:rgba(255,255,255,0.1);
+    backdrop-filter:blur(15px);
+    box-shadow:0 8px 32px rgba(0,0,0,0.3);
+    color:#fff;
+    animation:fadeIn 1s ease;
+}
+
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(20px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+h2{
+    text-align:center;
+    margin-bottom:20px;
+}
+
+/* Input */
+.input-group{
+    position:relative;
+    margin:12px 0;
+}
+
+.input-group input,
+.input-group textarea,
+.input-group select{
+    width:100%;
+    padding:12px;
+    border:none;
+    outline:none;
+    border-radius:8px;
+    background:rgba(255,255,255,0.2);
+    color:#fff;
+}
+
+.input-group label{
+    position:absolute;
+    top:12px;
+    left:12px;
+    font-size:14px;
+    transition:0.3s;
+}
+
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label,
+textarea:focus + label,
+textarea:not(:placeholder-shown) + label{
+    top:-8px;
+    font-size:11px;
+    color:#ffd369;
+}
+
+/* Buttons */
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#ffd369;
+    color:#000;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover{
+    transform:scale(1.05);
+}
+
+/* Preview */
+.preview{
+    display:flex;
+    flex-wrap:wrap;
+    margin-top:10px;
+}
+
+.preview img{
+    width:70px;
+    height:70px;
+    margin:5px;
+    border-radius:8px;
+    object-fit:cover;
+}
+
+/* Slider */
+.range{
+    margin-top:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Vendor Registration</h2>
+
+    <form onsubmit="return validateForm()">
+
+        <div class="input-group">
+            <input type="text" id="name" required placeholder=" ">
+            <label>Full Name</label>
+        </div>
+
+        <div class="input-group">
+            <input type="tel" id="mobile" required placeholder=" ">
+            <label>Mobile Number</label>
+        </div>
+
+        <div class="input-group">
+            <input type="text" required placeholder=" ">
+            <label>Business Name</label>
+        </div>
+
+        <div class="input-group">
+            <select required>
+                <option value="">Select Category</option>
+                <option>⚡ Electrician</option>
+                <option>🔧 Plumber</option>
+                <option>🍔 Food Vendor</option>
+                <option>📚 Tutor</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <textarea required placeholder=" "></textarea>
+            <label>Address</label>
+        </div>
+
+        
+        <!-- Status -->
+        <div class="input-group">
+            <select>
+                <option>🟢 Available</option>
+                <option>🔴 Busy</option>
+            </select>
+        </div>
+
+        <!-- Image Upload -->
+        <input type="file" multiple onchange="previewImages(event)">
+        <div class="preview" id="preview"></div>
+
+        <button type="submit">Register Now</button>
+    </form>
+</div>
+
+<script>
+function updatePrice(val){
+    document.getElementById("price").innerText = val;
+}
+
+function previewImages(event){
+    let preview = document.getElementById("preview");
+    preview.innerHTML = "";
+
+    Array.from(event.target.files).forEach(file => {
+        let reader = new FileReader();
+        reader.onload = function(){
+            let img = document.createElement("img");
+            img.src = reader.result;
+            preview.appendChild(img);
+        }
+        reader.readAsDataURL(file);
+    });
+}
+
+function validateForm(){
+    let mobile = document.getElementById("mobile").value;
+
+    if(mobile.length !== 10){
+        alert("Enter valid mobile number");
+        return false;
+    }
+
+    alert("✅ Registration Successful!");
+    return true;
+}
+</script>
+
+</body>
+</html>
