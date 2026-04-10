@@ -28,10 +28,20 @@ db.connect(err => {
 // ✅ Serve Frontend
 app.use(express.static(path.join(__dirname, "public")));
 
+// ✅ Main Page
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// ✅ User Page
+app.get("/user", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "user.html"));
+});
+
+// ✅ Vendor Page
+app.get("/vendor", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "vendor.html"));
+});
 
 // 🔐 SIGNUP
 app.post("/signup", async (req, res) => {
