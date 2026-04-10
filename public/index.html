@@ -163,6 +163,17 @@
 let map, markers = [], currentTheme = 'light', activeCat = 'All', isSignup = false;
 const vendors = [];
 
+// 🔄 SWITCH LOGIN / SIGNUP
+function switchMode(mode) {
+    isSignup = (mode === "signup");
+
+    document.getElementById("nameField").style.display = isSignup ? "block" : "none";
+    document.getElementById("actionBtn").innerText = isSignup ? "Sign Up" : "Sign In";
+
+    document.getElementById("tabLogin").classList.toggle("active", !isSignup);
+    document.getElementById("tabSign").classList.toggle("active", isSignup);
+}
+
 // 🔐 AUTH
 async function handleAuth() {
     const email = document.getElementById("regEmail").value;
@@ -175,48 +186,57 @@ async function handleAuth() {
         ? { name, email, password }
         : { email, password };
 
-    const res = await fetch(`http://localhost:5000/${url}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyData)
-    });
+    try {
+        const res = await fetch(`http://localhost:9000/${url}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(bodyData)
+        });
 
-    const data = await res.json();
+        const data = await res.json();
 
-    if (res.ok) {
-        document.getElementById('authOverlay').classList.add('hidden');
-        initMap();
-    } else {
-        alert(data.message || "Error");
+        if (res.ok) {
+            alert(isSignup ? "Signup Success ✅" : "Login Success ✅");
+            document.getElementById('authOverlay').classList.add('hidden');
+            initMap();
+        } else {
+            alert(data.message || "Error");
+        }
+    } catch (err) {
+        alert("Server not running ❌");
     }
 }
 
-
 // 📍 FETCH VENDORS
 async function fetchVendors() {
-    const res = await fetch("http://localhost:5000/vendors");
-    const data = await res.json();
+    try {
+        const res = await fetch("http://localhost:9000/vendors");
+        const data = await res.json();
 
-    vendors.length = 0;
-    vendors.push(...data);
+        vendors.length = 0;
+        vendors.push(...data);
 
-    renderListings();
+        renderListings();
+    } catch (err) {
+        console.log(err);
+        alert("Backend not connected ❌");
+    }
 }
-
 
 // 🗺️ INIT MAP
 function initMap() {
-    if(map) return;
+    if (map) return;
 
-    map = L.map('map', {zoomControl: false}).setView([22.8046, 86.2029], 14);
+    map = L.map('map', { zoomControl: false }).setView([22.8046, 86.2029], 14);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     map.on('moveend', renderListings);
 
-    fetchVendors(); // 🔥 important
+    fetchVendors();
 }
 
+// 📦 RENDER LIST
 function renderListings() {
     const list = document.getElementById('listings-list');
     const search = document.getElementById('mainSearch').value.toLowerCase();
@@ -226,6 +246,7 @@ function renderListings() {
     const bounds = map.getBounds();
 
     list.innerHTML = "";
+
     markers.forEach(m => map.removeLayer(m));
     markers = [];
 
@@ -233,7 +254,7 @@ function renderListings() {
         const matchesSearch = v.name.toLowerCase().includes(search);
         const matchesCat = (activeCat === 'All' || v.type === activeCat);
 
-        if(matchesSearch && matchesCat && bounds.contains([v.latitude, v.longitude])) {
+        if (matchesSearch && matchesCat && bounds.contains([v.latitude, v.longitude])) {
 
             const marker = L.marker([v.latitude, v.longitude]).addTo(map);
             markers.push(marker);
@@ -243,14 +264,54 @@ function renderListings() {
             card.innerHTML = `
                 <p>${v.type}</p>
                 <h3>${v.name}</h3>
-                <div>${v.rating} ★</div>
+                <div>${v.rating} ⭐</div>
 
-                <button onclick="window.open('https://wa.me/${v.phone}')">WhatsApp</button>
-                <button onclick="alert('Booked ${v.name}')">Book</button>
+                <div class="action-row">
+                    <button class="btn-act btn-chat" onclick="window.open('https://wa.me/${v.phone}')">Chat</button>
+                    <button class="btn-act btn-primary" onclick="alert('Booked ${v.name}')">Book</button>
+                </div>
             `;
 
             list.appendChild(card);
         }
+    });
+}
+
+// 🎯 CATEGORY FILTER
+function setCat(cat, el) {
+    activeCat = cat;
+
+    document.querySelectorAll(".cat-chip").forEach(c => c.classList.remove("active"));
+    el.classList.add("active");
+
+    renderListings();
+}
+
+// 🌙 THEME TOGGLE
+function toggleTheme() {
+    const body = document.body;
+
+    if (currentTheme === "light") {
+        body.classList.remove("light-mode");
+        body.classList.add("dark-mode");
+        currentTheme = "dark";
+        document.getElementById("themeText").innerText = "Light Mode";
+    } else {
+        body.classList.remove("dark-mode");
+        body.classList.add("light-mode");
+        currentTheme = "light";
+        document.getElementById("themeText").innerText = "Dark Mode";
+    }
+}
+
+// 📍 USER LOCATION
+function locateUser() {
+    navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        map.setView([lat, lng], 15);
+        L.marker([lat, lng]).addTo(map).bindPopup("You are here").openPopup();
     });
 }
 </script>
