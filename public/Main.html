@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CityHub - Choose Your Path</title>
+    <style>
+       
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #f0f2f5; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            color: #333;
+        }
+
+        
+        .selection-container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 450px;
+            padding: 40px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .selection-container h1 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+
+        .selection-container p.subtitle {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+     
+        .option-card {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 2px solid #e4e6eb;
+            border-radius: 12px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s ease-in-out;
+            background: #fafafa;
+        }
+
+        .option-card:hover {
+            border-color: #007185; 
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 113, 133, 0.1);
+            transform: translateY(-2px);
+        }
+
+       
+        .icon-box {
+            font-size: 28px;
+            background: #eef2f5;
+            height: 50px;
+            width: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+
+        
+        .card-text {
+            text-align: left;
+            flex-grow: 1;
+        }
+
+        .card-text h3 {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1a1a1a;
+        }
+
+        .card-text p {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+      
+        .arrow {
+            font-size: 18px;
+            color: #adb5bd;
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .option-card:hover .arrow {
+            color: #007185;
+            transform: translateX(4px);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="selection-container">
+        <h1>Welcome to CityHub</h1>
+        <p class="subtitle">How would you like to use our platform?</p>
+
+        <a href="user.html" class="option-card">
+            <div class="icon-box">👤</div>
+            <div class="card-text">
+                <h3>Continue as a User</h3>
+                <p>Book services, manage appointments, and explore vendors.</p>
+            </div>
+            <div class="arrow">➔</div>
+        </a>
+
+        <a href="vendor.html" class="option-card">
+            <div class="icon-box">🏪</div>
+            <div class="card-text">
+                <h3>Register as a Vendor</h3>
+                <p>List your business, manage your profile, and grow your reach.</p>
+            </div>
+            <div class="arrow">➔</div>
+        </a>
+    </div>
+
+</body>
+</html>
