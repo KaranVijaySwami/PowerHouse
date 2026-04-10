@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CityHub Pro | Jamshedpur's Super App</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+    <style>
+        :root {
+            --primary: #3b82f6; --accent: #f59e0b; --jd-orange: #ff6a00;
+            --radius: 12px; --transition: 0.3s ease;
+        }
+
+        .light-mode {
+            --bg-body: #f8fafc; --bg-card: #ffffff; --text-main: #1e293b;
+            --text-muted: #64748b; --border: #e2e8f0; --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .dark-mode {
+            --bg-body: #0f172a; --bg-card: #1e293b; --text-main: #f1f5f9;
+            --text-muted: #94a3b8; --border: #334155; --shadow: 0 10px 15px rgba(0,0,0,0.5);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-body); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: var(--transition); }
+
+        /* --- 1. DETAILED AUTHENTICATION LAYER --- */
+        .auth-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .auth-overlay.hidden { display: none; }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px);
+            padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.2);
+            width: 450px; color: white; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .auth-card h1 { font-size: 32px; font-weight: 900; letter-spacing: -1px; margin-bottom: 5px; color: #fff; }
+        .auth-card h1 span { color: var(--primary); }
+        .auth-card p { opacity: 0.7; font-size: 14px; margin-bottom: 30px; }
+
+        .auth-tabs { display: flex; gap: 10px; margin-bottom: 25px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 12px; }
+        .tab { flex: 1; padding: 10px; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.2s; font-size: 14px; }
+        .tab.active { background: var(--primary); color: white; }
+
+        .form-group { text-align: left; margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; margin-bottom: 5px; opacity: 0.8; font-weight: 600; }
+        .auth-card input { 
+            width: 100%; padding: 12px 15px; background: rgba(255,255,255,0.1); 
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; outline: none;
+            transition: 0.2s;
+        }
+        .auth-card input:focus { border-color: var(--primary); background: rgba(255,255,255,0.15); }
+        
+        .btn-enter { 
+            width: 100%; padding: 15px; background: var(--primary); color: white; 
+            border: none; border-radius: 10px; font-weight: 800; cursor: pointer; 
+            margin-top: 10px; font-size: 16px; transition: 0.3s;
+        }
+        .btn-enter:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+        /* --- 2. HEADER & SEARCH & CATEGORIES --- */
+        nav { background: var(--bg-card); padding: 10px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); z-index: 1000; }
+        .search-area { background: var(--bg-card); padding: 12px 5%; border-bottom: 1px solid var(--border); }
+        .search-wrap { display: flex; max-width: 800px; margin: 0 auto; background: var(--bg-body); border: 1px solid var(--border); border-radius: 25px; overflow: hidden; }
+        .search-wrap input { flex: 1; border: none; background: transparent; color: var(--text-main); padding: 10px 20px; outline: none; }
+        
+        .cat-scroller { display: flex; gap: 10px; padding: 10px 5%; background: var(--bg-card); overflow-x: auto; border-bottom: 1px solid var(--border); scrollbar-width: none; }
+        .cat-chip { padding: 6px 18px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-body); font-size: 13px; color: var(--text-muted); cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .cat-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* --- 3. MAIN CONTENT --- */
+        .content-area { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 420px; background: var(--bg-card); border-right: 1px solid var(--border); overflow-y: auto; }
+        #map { flex: 1; z-index: 1; position: relative; }
+
+        .listing-card { padding: 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+        .listing-card:hover { background: rgba(59, 130, 246, 0.05); }
+        .listing-card h3 { color: var(--text-main); margin-bottom: 5px; }
+        .rating-box { background: #10b981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; }
+        
+        .action-row { display: flex; gap: 8px; margin-top: 15px; }
+        .btn-act { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; font-size: 11px; }
+        .btn-chat { background: #25D366; color: white; }
+        .btn-primary { background: var(--primary); color: white; }
+        
+        .fab-geo { position: absolute; bottom: 25px; right: 25px; z-index: 1000; background: var(--bg-card); width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); cursor: pointer; color: var(--primary); border: 1px solid var(--border); }
+    </style>
+</head>
+<body class="light-mode">
+
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-card">
+            <h1>CITY<span>HUB</span></h1>
+            <p>Jamshedpur's Hyper-Local Discovery Hub</p>
+
+            <div class="auth-tabs">
+                <div id="tabLogin" class="tab active" onclick="switchMode('login')">Login</div>
+                <div id="tabSign" class="tab" onclick="switchMode('signup')">Sign Up</div>
+            </div>
+
+            <div id="authForm">
+                <div id="nameField" class="form-group" style="display: none;">
+                    <label>FULL NAME</label>
+                    <input type="text" id="regName" placeholder="Enter your name">
+                </div>
+
+                <div class="form-group">
+                    <label>EMAIL ADDRESS</label>
+                    <input type="email" id="regEmail" placeholder="name@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label>PASSWORD</label>
+                    <input type="password" id="regPass" placeholder="••••••••">
+                </div>
+
+                <button class="btn-enter" onclick="handleAuth()" id="actionBtn">Sign In</button>
+            </div>
+
+            <p style="margin-top: 25px; font-size: 12px; opacity: 0.6;">
+                By continuing, you agree to CityHub's Terms of Service.
+            </p>
+        </div>
+    </div>
+
+    <nav>
+        <div style="font-size: 20px; font-weight: 900; color: var(--primary);">CITY<span>HUB</span></div>
+        <button onclick="toggleTheme()" class="btn-act" style="width:auto; padding:8px 18px; background:var(--bg-body); color:var(--text-main); border:1px solid var(--border); border-radius: 20px;">
+            <i id="themeIcon" class="fa-solid fa-moon"></i> <span id="themeText">Dark Mode</span>
+        </button>
+    </nav>
+
+    <div class="search-area">
+        <div class="search-wrap">
+            <input type="text" id="mainSearch" placeholder="Search across 60+ local vendors..." onkeyup="renderListings()">
+        </div>
+    </div>
+
+    <div class="cat-scroller" id="catBar">
+        <div class="cat-chip active" onclick="setCat('All', this)">All</div>
+        <div class="cat-chip" onclick="setCat('Electrician', this)">Electricians</div>
+        <div class="cat-chip" onclick="setCat('Cafe', this)">Restaurants</div>
+        <div class="cat-chip" onclick="setCat('Pharmacy', this)">Pharmacy</div>
+        <div class="cat-chip" onclick="setCat('Gym', this)">Gyms</div>
+        <div class="cat-chip" onclick="setCat('Salon', this)">Salon</div>
+        <div class="cat-chip" onclick="setCat('Hardware', this)">Hardware Stores</div>
+    </div>
+
+    <div class="content-area">
+        <aside class="sidebar" id="listings-list"></aside>
+        <div id="map">
+            <div class="fab-geo" onclick="locateUser()"><i class="fa-solid fa-crosshairs fa-lg"></i></div>
+        </div>
+    </div>
+
+    <script>
+        let map, markers = [], currentTheme = 'light', activeCat = 'All', isSignup = false;
+        const vendors = [];
+        const neighborhoods = ["Bistupur", "Sakchi", "Kadma", "Telco", "Sonari", "Golmuri"];
+        const types = ["Electrician", "Cafe", "Pharmacy", "Gym", "Salon", "Hardware"];
+
+        // Generate 60 Mock Vendors
+        for(let i=1; i<=60; i++) {
+            const t = types[Math.floor(Math.random()*types.length)];
+            vendors.push({
+                id: i, name: `${neighborhoods[Math.floor(Math.random()*6)]} ${t} Service`,
+                type: t, rating: (Math.random()*1.4 + 3.6).toFixed(1),
+                phone: "919999988888",
+                coords: [22.8046 + (Math.random()-0.5)*0.05, 86.2029 + (Math.random()-0.5)*0.05]
+            });
+        }
+
+        // --- AUTH LOGIC ---
+        function switchMode(mode) {
+            isSignup = (mode === 'signup');
+            document.getElementById('tabLogin').classList.toggle('active', !isSignup);
+            document.getElementById('tabSign').classList.toggle('active', isSignup);
+            document.getElementById('nameField').style.display = isSignup ? 'block' : 'none';
+            document.getElementById('actionBtn').innerText = isSignup ? 'Create Account' : 'Sign In';
+        }
+
+        function handleAuth() {
+            // In a real app, validate SQL data here
+            document.getElementById('authOverlay').classList.add('hidden');
+            initMap();
+        }
+
+        // --- MAP & THEME LOGIC ---
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.body.className = currentTheme + '-mode';
+            document.getElementById('themeText').innerText = currentTheme === 'light' ? 'Dark Mode' : 'Light Mode';
+            document.getElementById('themeIcon').className = currentTheme === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+            if(map) updateTiles();
+        }
+
+        function initMap() {
+            if(map) return;
+            map = L.map('map', {zoomControl: false}).setView([22.8046, 86.2029], 14);
+            updateTiles();
+            map.on('moveend', renderListings);
+            renderListings();
+            setTimeout(() => map.invalidateSize(), 400);
+        }
+
+        function updateTiles() {
+            map.eachLayer(l => { if(l instanceof L.TileLayer) map.removeLayer(l); });
+            const url = currentTheme === 'dark' 
+                ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' 
+                : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+            L.tileLayer(url).addTo(map);
+        }
+
+        function setCat(c, el) {
+            document.querySelectorAll('.cat-chip').forEach(chip => chip.classList.remove('active'));
+            el.classList.add('active');
+            activeCat = c;
+            renderListings();
+        }
+
+        function renderListings() {
+            const list = document.getElementById('listings-list');
+            const search = document.getElementById('mainSearch').value.toLowerCase();
+            const bounds = map.getBounds();
+            list.innerHTML = "";
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            vendors.forEach(v => {
+                const matchesSearch = v.name.toLowerCase().includes(search);
+                const matchesCat = (activeCat === 'All' || v.type === activeCat);
+                if(matchesSearch && matchesCat && bounds.contains(L.latLng(v.coords))) {
+                    const marker = L.marker(v.coords).addTo(map);
+                    markers.push(marker);
+
+                    const card = document.createElement('div');
+                    card.className = 'listing-card';
+                    card.innerHTML = `
+                        <p style="font-size:10px; font-weight:900; color:var(--primary); text-transform:uppercase;">${v.type}</p>
+                        <h3>${v.name}</h3>
+                        <div class="rating-box">${v.rating} ★</div>
+                        <div class="action-row">
+                            <button class="btn-act btn-chat" onclick="window.open('https://wa.me/${v.phone}')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                            <button class="btn-act btn-primary" onclick="alert('Booking for ${v.name}')">Book Now</button>
+                        </div>
+                    `;
+                    card.onclick = (e) => { if(e.target.tagName !== 'BUTTON') map.flyTo(v.coords, 16); };
+                    list.appendChild(card);
+                }
+            });
+        }
+
+        function locateUser() { map.locate({setView: true, maxZoom: 16}); }
+    </script>
+</body>
+</html>
